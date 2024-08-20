@@ -1,0 +1,136 @@
+{
+  "name": "Blog to Mastodon",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        460,
+        660
+      ],
+      "id": "e6a14a70-f67b-4092-a54a-e6f942057414"
+    },
+    {
+      "parameters": {
+        "url": "https://blog.huyixi.com/index.xml",
+        "options": {}
+      },
+      "name": "RSS Feed Read",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        680,
+        460
+      ],
+      "id": "835e0674-5716-4faf-9be0-d2a2cbc4a62c"
+    },
+    {
+      "parameters": {
+        "interval": 30,
+        "unit": "minutes"
+      },
+      "name": "Interval",
+      "type": "n8n-nodes-base.interval",
+      "typeVersion": 1,
+      "position": [
+        460,
+        460
+      ],
+      "id": "1f1f0353-d35e-4e06-a899-2fa27db1486c"
+    },
+    {
+      "parameters": {
+        "functionCode": "/* only return new items */\nconst staticData = getWorkflowStaticData('global');\nconst lastItemId = staticData.lastItemId;\n\nconsole.log('lastItemId', lastItemId);\nconst firstItem = items[0];\nlet newItems = [];\n\nfunction getId(item) {\n  return item.json.guid;\n}\n\nif (lastItemId) {\n  for (const item of items) {\n    if (getId(item) === lastItemId) {\n      break;\n    }\n    newItems.push(item)\n  }\n} else {\n  newItems = [firstItem]\n}\n\nstaticData.lastItemId = getId(firstItem)\nreturn newItems.reverse()"
+      },
+      "name": "Function",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        880,
+        460
+      ],
+      "id": "bb4d4ec4-85ab-4c1c-93a5-d17a8fb70a87"
+    },
+    {
+      "parameters": {
+        "url": "https://mastodon.social",
+        "text": "=#博客更新 #Blog \n\n{{$node[\"RSS Feed Read\"].json[\"title\"]}} \n\n {{$node[\"RSS Feed Read\"].json[\"link\"]}}",
+        "additionalFields": {}
+      },
+      "id": "7fe52180-a768-4024-b853-5a246c6f5508",
+      "name": "Mastodon",
+      "type": "n8n-nodes-mastodon.mastodon",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        460
+      ],
+      "credentials": {
+        "mastodonOAuth2Api": {
+          "id": "3JnZFRPZnlWJ7x1L",
+          "name": "Mastodon account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Interval": {
+      "main": [
+        [
+          {
+            "node": "RSS Feed Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Feed Read": {
+      "main": [
+        [
+          {
+            "node": "Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function": {
+      "main": [
+        [
+          {
+            "node": "Mastodon",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "RSS Feed Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3e7314d2-7ba5-4ccc-8899-d4a6dac866c5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e76da2135cc42497d6f8cdea4938ea0c6cae04d9179bf4fe613512d7f0d05027"
+  },
+  "id": "CLeht0Uk9XLPzPew",
+  "tags": []
+}

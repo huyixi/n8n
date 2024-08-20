@@ -1,0 +1,131 @@
+{
+  "name": "Spotify to Mastodon",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "bc67d6a9-d8da-404d-9e78-25f569ef9079",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        460,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "library",
+        "limit": 10
+      },
+      "name": "Get liked tracks",
+      "type": "n8n-nodes-base.spotify",
+      "position": [
+        700,
+        560
+      ],
+      "typeVersion": 1,
+      "id": "a071e6c0-5380-4478-8bc0-990218d0b7d8",
+      "credentials": {
+        "spotifyOAuth2Api": {
+          "id": "nYmmflrVESOoBtKG",
+          "name": "Spotify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const staticData = getWorkflowStaticData('global');\nconst lastItemId = staticData.lastItemId;\n\nconsole.log('lastItemId', lastItemId);\nconst firstItem = items[0];\nlet newItems = [];\n\nfunction getId(item) {\n  return item.json.track.id;\n}\n\nif (lastItemId) {\n  for (const item of items) {\n    if (getId(item) === lastItemId) {\n      break;\n    }\n    newItems.push(item)\n  }\n} else {\n  newItems = [firstItem]\n}\n\nstaticData.lastItemId = getId(firstItem)\nreturn newItems.reverse()"
+      },
+      "name": "Function",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        920,
+        560
+      ],
+      "id": "02012fd9-ea2a-4f5b-b401-cc2e83c1881b"
+    },
+    {
+      "parameters": {
+        "interval": 10,
+        "unit": "minutes"
+      },
+      "name": "Interval",
+      "type": "n8n-nodes-base.interval",
+      "typeVersion": 1,
+      "position": [
+        460,
+        780
+      ],
+      "id": "c72dfa42-1adc-49be-93ba-5d786eb911de"
+    },
+    {
+      "parameters": {
+        "url": "https://mastodon.social",
+        "text": "=#Music\n正在听：{{$json[\"track\"][\"name\"]}} by {{$json[\"track\"][\"artists\"][0][\"name\"]}}\nhttps://open.spotify.com/track/{{$json[\"track\"][\"id\"]}}",
+        "additionalFields": {}
+      },
+      "id": "9f439937-d430-4cc5-8a65-bc2b1a8d0787",
+      "name": "Mastodon",
+      "type": "n8n-nodes-mastodon.mastodon",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        560
+      ],
+      "credentials": {
+        "mastodonOAuth2Api": {
+          "id": "3JnZFRPZnlWJ7x1L",
+          "name": "Mastodon account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get liked tracks": {
+      "main": [
+        [
+          {
+            "node": "Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function": {
+      "main": [
+        [
+          {
+            "node": "Mastodon",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interval": {
+      "main": [
+        [
+          {
+            "node": "Get liked tracks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3399aba8-c57d-4353-b9d7-dd5a46de020d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e76da2135cc42497d6f8cdea4938ea0c6cae04d9179bf4fe613512d7f0d05027"
+  },
+  "id": "m3POHDFLZHmKW60M",
+  "tags": []
+}
